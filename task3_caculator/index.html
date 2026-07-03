@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculator — Niharika</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after {
+  margin: 0; padding: 0; box-sizing: border-box;
+}
+
+:root {
+  --bg:          #0C0C0F;
+  --surface:     #16161A;
+  --panel:       #1E1E24;
+  --border:      rgba(255,255,255,0.07);
+  --orange:      #F97316;
+  --orange-d:    #EA580C;
+  --orange-glow: rgba(249,115,22,0.16);
+  --num:         #E8E8F0;
+  --muted:       #6B6B80;
+  --white:       #FAFAFA;
+  --font-mono:   'JetBrains Mono', monospace;
+  --font-ui:     'Inter', sans-serif;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  font-family: var(--font-ui);
+  padding: 24px;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  width: 520px; height: 520px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(249,115,22,0.09) 0%, transparent 70%);
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+/* ── header ── */
+.header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.header-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--orange);
+  margin-bottom: 8px;
+}
+
+.header h1 {
+  font-family: var(--font-mono);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--white);
+  letter-spacing: -0.5px;
+}
+
+.header p {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 5px;
+}
+
+/* ── calculator shell ── */
+.calculator {
+  width: 340px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 20px;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.03),
+    0 32px 80px rgba(0,0,0,0.65),
+    0 0 70px var(--orange-glow);
+  position: relative;
+}
+
+/* macOS dots */
+.calc-topbar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+
+.dot { width: 10px; height: 10px; border-radius: 50%; }
+.dot-r { background: #EF4444; }
+.dot-y { background: #F59E0B; }
+.dot-g { background: #22C55E; }
+
+/* ── display ── */
+.display-wrap {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 18px;
+  margin-bottom: 14px;
+  min-height: 92px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.display-expr {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  min-height: 16px;
+  word-break: break-all;
+  text-align: right;
+}
+
+#display {
+  font-family: var(--font-mono);
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--white);
+  background: none;
+  border: none;
+  outline: none;
+  width: 100%;
+  text-align: right;
+  caret-color: var(--orange);
+}
+
+#display::placeholder { color: var(--muted); }
+
+/* ── history chips ── */
+.history-strip {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  min-height: 24px;
+  margin-bottom: 14px;
+  align-items: center;
+}
+
+.history-chip {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 3px 9px;
+  border-radius: 100px;
+  background: rgba(249,115,22,0.08);
+  color: var(--orange);
+  border: 1px solid rgba(249,115,22,0.18);
+  cursor: pointer;
+  transition: background .15s;
+}
+.history-chip:hover { background: rgba(249,115,22,0.18); }
+
+/* ── buttons ── */
+.buttons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+button {
+  height: 64px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  font-size: 1.05rem;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--panel);
+  color: var(--num);
+  transition: background .14s, transform .12s, box-shadow .14s, border-color .14s;
+  position: relative;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255,255,255,0.13);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+}
+button:active { transform: translateY(0); box-shadow: none; }
+
+.btn-num { background: #1D1D24; }
+
+.btn-op {
+  background: rgba(249,115,22,0.10);
+  color: var(--orange);
+  border-color: rgba(249,115,22,0.16);
+}
+.btn-op:hover {
+  background: rgba(249,115,22,0.20);
+  border-color: rgba(249,115,22,0.32);
+  box-shadow: 0 6px 22px rgba(249,115,22,0.16);
+}
+
+.btn-clear {
+  background: rgba(239,68,68,0.09);
+  color: #F87171;
+  border-color: rgba(239,68,68,0.16);
+}
+.btn-clear:hover {
+  background: rgba(239,68,68,0.18);
+  border-color: rgba(239,68,68,0.32);
+}
+
+.btn-back {
+  background: rgba(245,158,11,0.09);
+  color: #FCD34D;
+  border-color: rgba(245,158,11,0.14);
+}
+.btn-back:hover {
+  background: rgba(245,158,11,0.18);
+}
+
+.btn-eq {
+  grid-column: span 2;
+  background: linear-gradient(135deg, var(--orange) 0%, var(--orange-d) 100%);
+  color: white;
+  border: none;
+  font-size: 1.4rem;
+  box-shadow: 0 4px 20px rgba(249,115,22,0.32);
+}
+.btn-eq:hover {
+  background: linear-gradient(135deg, #FB923C, var(--orange));
+  box-shadow: 0 8px 28px rgba(249,115,22,0.48);
+  transform: translateY(-2px);
+}
+.btn-eq:active { transform: translateY(0); }
+
+/* ── footer ── */
+.footer {
+  margin-top: 22px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.footer-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--orange);
+  opacity: 0.55;
+}
+
+/* keyboard hint */
+.kb-hint {
+  margin-top: 10px;
+  font-size: 11px;
+  color: #3a3a4a;
+  text-align: center;
+  letter-spacing: .03em;
+}
+
+@media (max-width: 400px) {
+  .calculator { width: 100%; }
+  button { height: 56px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; transform: none !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-label">CodeSoft</div>
+  <h1>Calculator</h1>
+  <p>HTML · CSS · JavaScript</p>
+</div>
+
+<div class="calculator">
+  <div class="calc-topbar">
+    <div class="dot dot-r"></div>
+    <div class="dot dot-y"></div>
+    <div class="dot dot-g"></div>
+  </div>
+
+  <div class="display-wrap">
+    <div class="display-expr" id="expr"></div>
+    <input type="text" id="display" placeholder="0" readonly>
+  </div>
+
+  <div class="history-strip" id="history"></div>
+
+  <div class="buttons">
+    <button class="btn-clear" onclick="clearDisplay()">C</button>
+    <button class="btn-back"  onclick="deleteLast()">⌫</button>
+    <button class="btn-op"    onclick="append('%')">%</button>
+    <button class="btn-op"    onclick="append('/')">÷</button>
+
+    <button class="btn-num" onclick="append('7')">7</button>
+    <button class="btn-num" onclick="append('8')">8</button>
+    <button class="btn-num" onclick="append('9')">9</button>
+    <button class="btn-op"  onclick="append('*')">×</button>
+
+    <button class="btn-num" onclick="append('4')">4</button>
+    <button class="btn-num" onclick="append('5')">5</button>
+    <button class="btn-num" onclick="append('6')">6</button>
+    <button class="btn-op"  onclick="append('-')">−</button>
+
+    <button class="btn-num" onclick="append('1')">1</button>
+    <button class="btn-num" onclick="append('2')">2</button>
+    <button class="btn-num" onclick="append('3')">3</button>
+    <button class="btn-op"  onclick="append('+')">+</button>
+
+    <button class="btn-num" onclick="append('0')">0</button>
+    <button class="btn-num" onclick="append('.')">.</button>
+    <button class="btn-eq"  onclick="calculate()">=</button>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="footer-dot"></div>
+  <span>Developed by Niharika Kandlagunta</span>
+</div>
+<div class="kb-hint">Keyboard supported · Esc to clear</div>
+
+<script>
+const display   = document.getElementById('display');
+const exprEl    = document.getElementById('expr');
+const historyEl = document.getElementById('history');
+const MAX_HIST  = 4;
+let   hist      = [];
+let   justCalc  = false;
+
+const OPS = ['+', '-', '*', '/', '%'];
+
+function append(v) {
+  if (justCalc && !isNaN(v) && v !== '.') display.value = '';
+  justCalc = false;
+
+  const cur  = display.value;
+  const last = cur.slice(-1);
+
+  if (OPS.includes(v) && OPS.includes(last)) {
+    display.value = cur.slice(0, -1) + v;
+    return;
+  }
+  if (cur === '' && OPS.includes(v) && v !== '-') return;
+  if (v === '.') {
+    const seg = cur.split(/[+\-*\/%]/).pop();
+    if (seg.includes('.')) return;
+  }
+
+  display.value += v;
+  exprEl.textContent = '';
+}
+
+function clearDisplay() {
+  display.value = '';
+  exprEl.textContent = '';
+  justCalc = false;
+}
+
+function deleteLast() {
+  display.value = display.value.slice(0, -1);
+  exprEl.textContent = '';
+  justCalc = false;
+}
+
+function calculate() {
+  const raw = display.value;
+  if (!raw || raw === 'Error') return;
+
+  const pretty = raw.replace(/\*/g, '×').replace(/\//g, '÷');
+  try {
+    let result = Function('"use strict"; return (' + raw + ')')();
+    if (!isFinite(result)) throw new Error('div0');
+    result = parseFloat(result.toPrecision(12));
+    exprEl.textContent = pretty + ' =';
+    display.value = String(result);
+    addHist(pretty + ' = ' + result, result);
+    justCalc = true;
+  } catch {
+    exprEl.textContent = '';
+    display.value = 'Error';
+    justCalc = true;
+  }
+}
+
+function addHist(label, value) {
+  hist.unshift({ label, value });
+  if (hist.length > MAX_HIST) hist.pop();
+  renderHist();
+}
+
+function renderHist() {
+  historyEl.innerHTML = '';
+  hist.forEach(h => {
+    const chip = document.createElement('div');
+    chip.className = 'history-chip';
+    chip.textContent = h.value;
+    chip.title = h.label;
+    chip.onclick = () => {
+      display.value = String(h.value);
+      exprEl.textContent = '';
+      justCalc = false;
+    };
+    historyEl.appendChild(chip);
+  });
+}
+
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key >= '0' && e.key <= '9') { e.preventDefault(); append(e.key); }
+  else if (e.key === '+') append('+');
+  else if (e.key === '-') append('-');
+  else if (e.key === '*') append('*');
+  else if (e.key === '/') { e.preventDefault(); append('/'); }
+  else if (e.key === '%') append('%');
+  else if (e.key === '.') append('.');
+  else if (e.key === 'Enter' || e.key === '=') { e.preventDefault(); calculate(); }
+  else if (e.key === 'Backspace') deleteLast();
+  else if (e.key === 'Escape') clearDisplay();
+});
+</script>
+</body>
+</html>
